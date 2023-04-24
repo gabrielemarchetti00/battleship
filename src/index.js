@@ -30,10 +30,10 @@ const Gameboard = () => {
     }
     const receiveAttack = function(x, y) {
         if(this.board[x][y] != null) {
-            board[x][y].hit();
+            this.board[x][y].hit();
         }
         else {
-            board[x][y] = 'X';
+            this.board[x][y] = 'X';
         }
     }
     const allSunk = function() {
@@ -141,7 +141,7 @@ function colorCell(){
         for(let i=0; i<computerBoard.board.length; i++){
             for(let j=0; j<computerBoard.board[i].length; j++){
                 if(cell.id == `${i}${j}` && computerBoard.board[i][j] != null) {
-                    cell.style.backgroundColor = 'blue';
+                    //cell.style.backgroundColor = 'blue';
                 }
             }
         }
@@ -152,31 +152,22 @@ function clickCell(active, domCell, board, x, y) {
     active.attack(x, y, board);
     if(board.board[x][y] == 'X') {
         domCell.textContent = 'X';
+        domCell.style.pointerEvents = 'none';
 
         gameController.switchPlayerTurn();
         if(gameController.getActivePlayer().name == 'computer') {
-            let x = Math.floor(Math.random() * (9 - 0 + 1) + 0)
-            let y = Math.floor(Math.random() * (9 - 0 + 1) + 0)
-
-            const playercells = document.querySelectorAll('.pcell');
-            playercells.forEach((cell) => {
-                for(let i=0; i<playerBoard.board.length; i++){
-                    for(let j=0; j<playerBoard.board[i].length; j++){
-                        if(cell.id == `${x}${y}`) {
-                            domCell = cell;
-                        }
-                    }
-                }
-            })
-            clickCell(computer, domCell, playerBoard, x, y)
+            computerMove();
         }
     }
     else{
-        domCell.style.backgroundColor = 'lightBlue';
+        if(gameController.getActivePlayer().name == 'computer') {
+            computerMove();
+        }
+        domCell.style.backgroundColor = 'grey';
         domCell.style.pointerEvents = 'none';
     }
     checkSunk();
-    checkWin(board);
+    checkWin(board, active);
 }
 
 function checkSunk() {
@@ -205,10 +196,48 @@ function checkSunk() {
     })
 }
 
-function checkWin(board) {
+function checkWin(board, active) {
     const winnerDiv = document.querySelector('.winner');
     if(board.allSunk() == true) {
-        winnerDiv.textContent = 'PLAYER WON';
+        if(active.name == 'player') {
+            winnerDiv.textContent = 'YOU WON!'
+        }
+        else{
+            winnerDiv.textContent = 'COMPUTER WON!'
+        }
+    }
+}
+
+let array = [];
+function computerMove() {
+    let xy = generateUniqueRandom();
+    let x = xy.slice(0, 1);
+    let y = xy.slice(1);
+
+    const playercells = document.querySelectorAll('.pcell');
+    let domCell;
+    playercells.forEach((cell) => {
+        for(let i=0; i<playerBoard.board.length; i++){
+            for(let j=0; j<playerBoard.board[i].length; j++){
+                if(cell.id == `${x}${y}`) {
+                   domCell = cell;
+                }
+            }
+        }
+    })
+    clickCell(computer, domCell, playerBoard, x, y)
+}
+
+function generateUniqueRandom() {
+    let x = Math.floor(Math.random() * (9 - 0 + 1) + 0)
+    let y = Math.floor(Math.random() * (9 - 0 + 1) + 0)
+    let xy = ''+x+y;
+
+    if(!array.includes(xy)) {
+        array.push(xy);
+        return xy;
+    } else {
+        return generateUniqueRandom();
     }
 }
 
@@ -266,10 +295,6 @@ const gameController = (() => {
         activePlayer = activePlayer === player ? computer : player;
     };
 
-    const playRound = () => {
-        switchPlayerTurn();
-    };
-
-    return {playRound, getActivePlayer, checkWin, switchPlayerTurn};
+    return {getActivePlayer, switchPlayerTurn};
 })();
 
