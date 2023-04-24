@@ -9,6 +9,7 @@ const Ship = (length, hits = 0, sunk = false) => {
         if(this.length == this.hits) {
             this.sunk = true;
         }
+        return this.sunk;
     }
     return {length, hits, sunk, hit, isSunk}
 }
@@ -49,11 +50,11 @@ const Gameboard = () => {
     return {board, place, receiveAttack, allSunk}
 }
 
-const Player = () => {
+const Player = (name) => {
     const attack = function(x, y, gameboard) {
         gameboard.receiveAttack(x, y);
     }
-    return {attack}
+    return {attack, name}
 }
 
 function createBoards(pb, cb) {
@@ -79,17 +80,48 @@ function createBoards(pb, cb) {
 }
 
 function placeShips(pb, cb) {
-    const ship1p = Ship(1);
-    const ship2p = Ship(2);
-    pb.place(1,1,ship1p);
-    pb.place(5,5,ship2p);
-    pb.place(5,6,ship2p);
+    pb.place(1,1,ship1pa);
+    pb.place(0,3,ship1pb);
+    pb.place(9,8,ship1pc);
+    pb.place(6,7,ship1pd);
+    pb.place(8,5,ship2pa);
+    pb.place(8,6,ship2pa);
+    pb.place(3,3,ship2pb);
+    pb.place(3,4,ship2pb);
+    pb.place(6,2,ship2pc);
+    pb.place(7,2,ship2pc);
+    pb.place(0,7,ship3pa);
+    pb.place(0,8,ship3pa);
+    pb.place(0,9,ship3pa);
+    pb.place(9,0,ship3pb);
+    pb.place(9,1,ship3pb);
+    pb.place(9,2,ship3pb);
+    pb.place(2,9,ship4pa);
+    pb.place(3,9,ship4pa);
+    pb.place(4,9,ship4pa);
+    pb.place(5,9,ship4pa);
+    
 
-    const ship1c = Ship(1);
-    const ship2c = Ship(2);
-    cb.place(0,1,ship1c);
-    cb.place(8,5,ship2c);
-    cb.place(7,5,ship2c);
+    cb.place(0,0,ship1ca);
+    cb.place(1,3,ship1cb);
+    cb.place(9,8,ship1cc);
+    cb.place(6,7,ship1cd);
+    cb.place(8,5,ship2ca);
+    cb.place(8,6,ship2ca);
+    cb.place(3,3,ship2cb);
+    cb.place(3,4,ship2cb);
+    cb.place(6,4,ship2cc);
+    cb.place(6,5,ship2cc);
+    cb.place(0,7,ship3ca);
+    cb.place(0,8,ship3ca);
+    cb.place(0,9,ship3ca);
+    cb.place(9,0,ship3cb);
+    cb.place(9,1,ship3cb);
+    cb.place(9,2,ship3cb);
+    cb.place(3,0,ship4ca);
+    cb.place(4,0,ship4ca);
+    cb.place(5,0,ship4ca);
+    cb.place(6,0,ship4ca);
 }
 
 function colorCell(){
@@ -116,40 +148,111 @@ function colorCell(){
     })
 }
 
+function clickCell(active, domCell, board, x, y) {
+    active.attack(x, y, board);
+    if(board.board[x][y] == 'X') {
+        domCell.textContent = 'X';
+
+        gameController.switchPlayerTurn();
+        if(gameController.getActivePlayer().name == 'computer') {
+            let x = Math.floor(Math.random() * (9 - 0 + 1) + 0)
+            let y = Math.floor(Math.random() * (9 - 0 + 1) + 0)
+
+            const playercells = document.querySelectorAll('.pcell');
+            playercells.forEach((cell) => {
+                for(let i=0; i<playerBoard.board.length; i++){
+                    for(let j=0; j<playerBoard.board[i].length; j++){
+                        if(cell.id == `${x}${y}`) {
+                            domCell = cell;
+                        }
+                    }
+                }
+            })
+            clickCell(computer, domCell, playerBoard, x, y)
+        }
+    }
+    else{
+        domCell.style.backgroundColor = 'lightBlue';
+        domCell.style.pointerEvents = 'none';
+    }
+    checkSunk();
+    checkWin(board);
+}
+
+function checkSunk() {
+    const computercells = document.querySelectorAll('.ccell');
+    computercells.forEach((cell) => {
+        for(let i=0; i<computerBoard.board.length; i++){
+            for(let j=0; j<computerBoard.board[i].length; j++){
+                if(cell.id == `${i}${j}` && computerBoard.board[i][j] != null &&
+                   computerBoard.board[i][j].sunk == true) {
+                    cell.style.backgroundColor = 'black';
+                }
+            }
+        }
+    })
+
+    const playercells = document.querySelectorAll('.pcell');
+    playercells.forEach((cell) => {
+        for(let i=0; i<playerBoard.board.length; i++){
+            for(let j=0; j<playerBoard.board[i].length; j++){
+                if(cell.id == `${i}${j}` && playerBoard.board[i][j] != null &&
+                   playerBoard.board[i][j].sunk == true) {
+                    cell.style.backgroundColor = 'black';
+                }
+            }
+        }
+    })
+}
+
+function checkWin(board) {
+    const winnerDiv = document.querySelector('.winner');
+    if(board.allSunk() == true) {
+        winnerDiv.textContent = 'PLAYER WON';
+    }
+}
+
+const player = Player('player');
+const computer = Player('computer');
 
 const playerBoard = Gameboard();
 const computerBoard = Gameboard();
 
+const ship1pa = Ship(1);
+const ship1pb = Ship(1);
+const ship1pc = Ship(1);
+const ship1pd = Ship(1);
+const ship2pa = Ship(2);
+const ship2pb = Ship(2);
+const ship2pc = Ship(2);
+const ship3pa = Ship(3);
+const ship3pb = Ship(3);
+const ship4pa = Ship(4);
 
-const displayController = (() => {
-    const updateScreen = () => {
-        colorCell();
-    }
-
-    function clickHandlerBoard(){
-        gameController.playRound();
-        updateScreen();
-    };
-
-    return{updateScreen}
-})();
+const ship1ca = Ship(1);
+const ship1cb = Ship(1);
+const ship1cc = Ship(1);
+const ship1cd = Ship(1);
+const ship2ca = Ship(2);
+const ship2cb = Ship(2);
+const ship2cc = Ship(2);
+const ship3ca = Ship(3);
+const ship3cb = Ship(3);
+const ship4ca = Ship(4);
 
 const gameController = (() => {
-    const player = Player();
-    const computer = Player();
-
     createBoards(playerBoard, computerBoard);
     placeShips(playerBoard, computerBoard);
 
-    displayController.updateScreen();
+    colorCell();
 
     const computercells = document.querySelectorAll('.ccell');
     computercells.forEach((cell) => {
         cell.addEventListener('click', () => {
             for(let i=0; i<computerBoard.board.length; i++){
                 for(let j=0; j<computerBoard.board[i].length; j++){
-                    if(cell.id == `${i}${j}` && computerBoard.board[i][j] != null) {
-                        cell.style.backgroundColor = 'lightBlue';
+                    if(cell.id == `${i}${j}`) {
+                        clickCell(player, cell, computerBoard, i, j);
                     }
                 }
             }
@@ -164,14 +267,9 @@ const gameController = (() => {
     };
 
     const playRound = () => {
-        console.log('cioa');
         switchPlayerTurn();
     };
 
-    let winner;
-    const checkWin = () => {
-    }
-
-    return {playRound, getActivePlayer, checkWin};
+    return {playRound, getActivePlayer, checkWin, switchPlayerTurn};
 })();
 
